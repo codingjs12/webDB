@@ -13,91 +13,121 @@
             border-collapse: collapse;
             padding : 5px;
         }
-
         th {
             color : rgb(132, 39, 219);
             background-color: aliceblue;
             /* font-size: 30px; */
         }
-
+        .r-margin {
+            margin-right: 5px;
+        }
+        .a-margin {
+            width: 430px;
+            margin : 10px;
+            text-align: center;
+        }
         #index {
             margin-right: 3px;
             text-decoration: none;
         }
-
-        .color-black {
-            color: black;
+        .color-black{
+            color : black;
         }
-
-        .bgcolor-gray {
-            background-color: gray;
+        .color-blue{
+            color : blue;
         }
-
-        .color-blue {
-            color: blue;
+        .bgcolor-gray{
+            background-color: #ddd;
         }
-
+        #container{
+            width: 500px;
+            margin : 20px auto;
+        }
+        a{
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <div style="margin : 10px;">
-            <select v-model="kind">
-                <option value="all">::전체::</option>
-                <option value="title">제목</option>
-                <option value="name">작성자</option>
-            </select>
-            <input v-model="keyword" @keyup.enter="fnList"> &nbsp;
-            <button @click="fnList">검색</button>
-        </div>
-        <div>
-            <select v-model="pageSize" @change="fnList">
-                <option value="5">5개씩</option>
-                <option value="10">10개씩</option>
-                <option value="15">15개씩</option>
-                <option value="20">20개씩</option>
-            </select>
-        </div>
-
-        <table>
-            <tr>
-                <th>번호</th>
-                <th>
-                    <a href="javascript:;" @click="fnOrder('TITLE')">제목</a>
-                </th>
-                <th>
-                    <a href="javascript:;" @click="fnOrder('USERNAME')">작성자</a>
-                </th>
-                <th>
-                    <a href="javascript:;" @click="fnOrder('CNT')">조회수</a>
-                </th>
-                <th>작성일</th>
-                <th>삭제</th>
-            </tr>
-            <tr v-for="item in list">
-                <td>{{item.BOARDNO}}</td>
-                <td>
-                    <a href="javascript:;" @click="fnView(item.BOARDNO)">{{item.TITLE}}</a>
-                </td>
-                <td>
-                    <a href="javascript:;" @click="fnUser(item.USERID)">{{item.USERNAME}}</a>
-                </td>
-                <td>{{item.CNT}}</td>
-                <td>{{item.CDATETIME}}</td>
-                <td><button @click="fnRemove(item.BOARDNO)">삭제</button></td>
-            </tr>
-        </table>
-        <div style="width: 450px; text-align: center; margin-top: 10px;">
-            <a v-if="page != 1" id="index" href="javascript:;" class="color-black" @click="fnPageMove('prev')"> < </a>
-            <a id="index" href="javascript:;" v-for="num in index" @click="fnPage(num)">
-                <span v-if="page == num" class="bgcolor-gray color-blue">{{num}}</span>
-                <span v-else class="color-black">{{num}}</span>
-            </a>
-            <a v-if="page != index" id="index" href="javascript:;" class="color-black" @click="fnPageMove('next')"> > </a>
+        <div id="container">
+            <div class="a-margin">
+                <select v-model="kind" class="r-margin">
+                    <option value="all">::전체::</option>
+                    <option value="title">제목</option>
+                    <option value="name">작성자</option>
+                </select>
+                <input v-model="keyword" @keyup.enter="fnList" class="r-margin"> 
+                <button @click="fnList">검색</button>
+            </div>
+            <div>
+                <select v-model="pageSize" @change="fnList">
+                    <option value="5">5개씩</option>
+                    <option value="10">10개씩</option>
+                    <option value="15">15개씩</option>
+                    <option value="20">20개씩</option>
+                </select>
+            </div>
+            <table>
+                <tr>
+                    <th>번호</th>
+                    <th>
+                        <a href="javascript:;" @click="fnOrder('TITLE')">제목</a>
+                    </th>
+                    <th>
+                        <a href="javascript:;" @click="fnOrder('USERNAME')">작성자</a>
+                    </th>
+                    <th>
+                        <a href="javascript:;" @click="fnOrder('CNT')">조회수</a>
+                    </th>
+                    <th>작성일</th>
+                    <th>삭제</th>
+                </tr>
+                <tr v-for="item in list">
+                    <td>{{item.BOARDNO}}</td>
+                    <td>
+                        <a href="javascript:;" @click="fnView(item.BOARDNO)">{{item.TITLE}}</a>
+                    </td>
+                    <td>
+                        <a href="javascript:;" @click="fnUser(item.USERID)">{{item.USERNAME}}</a>
+                    </td>
+                    <td>{{item.CNT}}</td>
+                    <td>{{item.CDATETIME}}</td>
+                    <td><button @click="fnRemove(item.BOARDNO)">삭제</button></td>
+                </tr>
+            </table>
+            <div style="width: 450px; text-align: center; margin-top : 10px;">
+                <a 
+                    v-if="page != 1"
+                    id="index" 
+                    href="javascript:;" 
+                    class="color-black"
+                    @click="fnPageMove('prev')"> < 
+                </a>
+                
+                <a id="index" href="javascript:;" 
+                    v-for="num in index" @click="fnPage(num)">
+                    <span 
+                        v-if="page == num" 
+                        class="bgcolor-gray color-blue">{{num}}
+                    </span>
+                    <span 
+                        v-else 
+                        class="color-black">{{num}}
+                    </span>
+                </a>
+                <a 
+                    v-if="page != index"
+                    id="index" 
+                    href="javascript:;" 
+                    class="color-black"
+                    @click="fnPageMove('next')"> > 
+                </a>
+            </div>
             <div>
                 <button @click="fnInsert">글쓰기</button>
             </div>
-            <div style="margin-bottom: 300px;"></div>
+            <div style="margin-bottom : 300px;"></div>
         </div>
     </div>
 </body>
@@ -115,14 +145,13 @@
                 index : 0,
                 pageSize : 5,
                 page : 1
-
             };
         },
         methods: {
             fnList : function() { 
                 var self = this;
                 var nparmap = {
-                    keyword : self.keyword,
+                    keyword : self.keyword, 
                     kind : self.kind,
                     orderKey : self.orderKey,
                     orderType : self.orderType,
@@ -158,6 +187,7 @@
                         alert("삭제되었습니다!");
                         console.log(data);
                         self.fnList();
+                        
                     }
                 });
             },
@@ -167,29 +197,27 @@
             fnInsert : function(){
                 location.href = "board-insert.html";
             },
-            fnUser : function(userId) {
+            fnUser : function(userId){
                 location.href = "user-view.html?userId="+userId;
             },
 
-            fnOrder : function(orderKey) {
+            fnOrder : function(orderKey){
                 let self = this;
-                if(self.orderKey != orderKey) {
-                    orderType = "";
+                if(self.orderKey != orderKey){
+                    self.orderType = "";
                 }
                 self.orderKey = orderKey;
                 self.orderType = self.orderType == "ASC" ? "DESC" : "ASC";
                 self.fnList();
             },
-
-            fnPage : function(num) {
+            fnPage : function(num){
                 let self = this;
                 self.page = num;
                 self.fnList();
             },
-
-            fnPageMove : function(direction) {
+            fnPageMove : function(direction){
                 let self = this;
-                if(direction == "next") {
+                if(direction == "next"){
                     self.page++;
                 } else {
                     self.page--;

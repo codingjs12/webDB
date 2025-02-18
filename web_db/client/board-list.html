@@ -13,11 +13,30 @@
             border-collapse: collapse;
             padding : 5px;
         }
+
         th {
             color : rgb(132, 39, 219);
             background-color: aliceblue;
             /* font-size: 30px; */
         }
+
+        #index {
+            margin-right: 3px;
+            text-decoration: none;
+        }
+
+        .color-black {
+            color: black;
+        }
+
+        .bgcolor-gray {
+            background-color: gray;
+        }
+
+        .color-blue {
+            color: blue;
+        }
+
     </style>
 </head>
 <body>
@@ -30,6 +49,14 @@
             </select>
             <input v-model="keyword" @keyup.enter="fnList"> &nbsp;
             <button @click="fnList">검색</button>
+        </div>
+        <div>
+            <select v-model="pageSize" @change="fnList">
+                <option value="5">5개씩</option>
+                <option value="10">10개씩</option>
+                <option value="15">15개씩</option>
+                <option value="20">20개씩</option>
+            </select>
         </div>
 
         <table>
@@ -60,8 +87,17 @@
                 <td><button @click="fnRemove(item.BOARDNO)">삭제</button></td>
             </tr>
         </table>
-        <div>
-            <button @click="fnInsert">글쓰기</button>
+        <div style="width: 450px; text-align: center; margin-top: 10px;">
+            <a v-if="page != 1" id="index" href="javascript:;" class="color-black" @click="fnPageMove('prev')"> < </a>
+            <a id="index" href="javascript:;" v-for="num in index" @click="fnPage(num)">
+                <span v-if="page == num" class="bgcolor-gray color-blue">{{num}}</span>
+                <span v-else class="color-black">{{num}}</span>
+            </a>
+            <a v-if="page != index" id="index" href="javascript:;" class="color-black" @click="fnPageMove('next')"> > </a>
+            <div>
+                <button @click="fnInsert">글쓰기</button>
+            </div>
+            <div style="margin-bottom: 300px;"></div>
         </div>
     </div>
 </body>
@@ -74,7 +110,12 @@
                 list : [],
                 keyword : "",
                 kind : "all",
-                orderKey : ""
+                orderKey : "",
+                orderType : "",
+                index : 0,
+                pageSize : 5,
+                page : 1
+
             };
         },
         methods: {
@@ -83,7 +124,10 @@
                 var nparmap = {
                     keyword : self.keyword,
                     kind : self.kind,
-                    orderKey : self.orderKey
+                    orderKey : self.orderKey,
+                    orderType : self.orderType,
+                    pageSize : self.pageSize,
+                    page : (self.page-1) * self.pageSize
                 };
                 $.ajax({
                     url: "http://localhost:3000/list",  // 서버 주소 수정 (http:// 포함)
@@ -94,6 +138,7 @@
                     success: function(data) {
                         console.log(data);
                         self.list = data.list;
+                        self.index = Math.ceil(data.count / self.pageSize);
                     }
                 });
             },
@@ -113,7 +158,6 @@
                         alert("삭제되었습니다!");
                         console.log(data);
                         self.fnList();
-                        
                     }
                 });
             },
@@ -129,7 +173,27 @@
 
             fnOrder : function(orderKey) {
                 let self = this;
+                if(self.orderKey != orderKey) {
+                    orderType = "";
+                }
                 self.orderKey = orderKey;
+                self.orderType = self.orderType == "ASC" ? "DESC" : "ASC";
+                self.fnList();
+            },
+
+            fnPage : function(num) {
+                let self = this;
+                self.page = num;
+                self.fnList();
+            },
+
+            fnPageMove : function(direction) {
+                let self = this;
+                if(direction == "next") {
+                    self.page++;
+                } else {
+                    self.page--;
+                }
                 self.fnList();
             }
 

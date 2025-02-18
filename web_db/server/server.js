@@ -70,7 +70,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/list', async (req, res) => {
-  const {keyword, kind, orderKey} = req.body;  // 클라이언트에서 보낸 데이터
+  const {keyword, kind, orderKey, orderType, pageSize, page} = req.body;  // 클라이언트에서 보낸 데이터
   try {
     const connection = await connectToDB();
     if (connection) {
@@ -83,8 +83,9 @@ app.post('/list', async (req, res) => {
         search = `WHERE USERNAME LIKE '%${keyword}%'`;
       }
       let order = "";
+      
       if(orderKey != "") {
-        order = ` ORDER BY ${orderKey} ASC`
+        order = ` ORDER BY ${orderKey} ${orderType}`
       }
 
       const result = await connection.execute(
@@ -92,15 +93,25 @@ app.post('/list', async (req, res) => {
           BOARDNO, TITLE, USERNAME, B.USERID,
           CNT, TO_CHAR(B.CDATETIME, 'YYYY-MM-DD') AS CDATETIME 
          FROM BOARD B 
-         INNER JOIN MEMBER M ON B.USERID = M.USERID ` + search + order,
+         INNER JOIN MEMBER M ON B.USERID = M.USERID ` + search + order
+         +` OFFSET :page ROWS FETCH NEXT :pageSize ROWS ONLY`,
          /*
          '%' + keyword + '%'
          {keyword : `%${keyword}%`}
          */
+        [page, pageSize],
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      const count = await connection.execute(
+        `SELECT COUNT(*) AS BOARDCNT
+          FROM BOARD B
+          INNER JOIN MEMBER M ON B.USERID = M.USERID`,
         {},
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      res.send({ msg: 'success', list : result.rows });
+
+      res.send({ msg: 'success', list : result.rows, count : count.rows[0] });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });

@@ -13,21 +13,23 @@
             아이디 : {{user.USERID}}
         </div>
         <div>
-            이름 : {{user.USERNAME}}
+            이름 : <input v-model="user.USERNAME">
         </div>
         <div>
-            이메일 : {{user.EMAIL}}
+            이메일 : <input v-model="user.EMAIL">
+        <div>
+            핸드폰번호 : <input v-model="user.PHONE">
         </div>
         <div>
-            핸드폰번호 : {{user.PHONE}}
+            성별 : 
+            <!-- <input v-model="user.GENDER"> -->
+            <select v-model="user.GENDER">
+                <option value="M">남자</option>
+                <option value="F">여자</option>
+            </select>
         </div>
         <div>
-            성별 :
-            <span v-if="user.GENDER == 'M'">남자</span>
-            <span v-else>여자</span>
-        </div>
-        <div>
-            <button @click="fnEdit">수정</button>
+            <button @click="fnSave">저장</button>
         </div>
     </div>
 </body>
@@ -63,16 +65,33 @@
                     }
                 });
             },
-            fnEdit : function() {
+
+            fnSave : function() {
                 let self = this;
-                location.href = "user-edit.html?userId="+self.userId;
-            }
+                let nparmap = self.user;
+
+                $.ajax({
+                    url: "http://localhost:3000/user/edit",  // 서버 주소 수정 (http:// 포함)
+                    dataType: "json",
+                    type: "POST", // GET, POST
+                    data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
+                    contentType: "application/json",
+                    success: function (data) {
+                        if(data.msg == "success") {
+                            alert("수정되었습니다.");
+                            location.href = "user-view.html?userId="+self.userId;
+                        }
+                    }
+                });
+            },
+
         },
         mounted() {
             // 처음 시작할 때 실행되는 부분
+            let self = this;
             const queryParams = new URLSearchParams(window.location.search);
-            this.userId = queryParams.get('userId');
-            this.fnGetUser();
+            self.userId = queryParams.get('userId');
+            self.fnGetUser();
         }
     });
 

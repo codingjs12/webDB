@@ -22,12 +22,28 @@
 </head>
 <body>
     <div id="app">
+        <div style="margin : 10px;">
+            <select v-model="kind">
+                <option value="all">::전체::</option>
+                <option value="title">제목</option>
+                <option value="name">작성자</option>
+            </select>
+            <input v-model="keyword" @keyup.enter="fnList"> &nbsp;
+            <button @click="fnList">검색</button>
+        </div>
+
         <table>
             <tr>
                 <th>번호</th>
-                <th>제목</th>
-                <th>작성자</th>
-                <th>조회수</th>
+                <th>
+                    <a href="javascript:;" @click="fnOrder('TITLE')">제목</a>
+                </th>
+                <th>
+                    <a href="javascript:;" @click="fnOrder('USERNAME')">작성자</a>
+                </th>
+                <th>
+                    <a href="javascript:;" @click="fnOrder('CNT')">조회수</a>
+                </th>
                 <th>작성일</th>
                 <th>삭제</th>
             </tr>
@@ -55,13 +71,20 @@
     const app = Vue.createApp({
         data() {
             return {
-                list : [] 
+                list : [],
+                keyword : "",
+                kind : "all",
+                orderKey : ""
             };
         },
         methods: {
             fnList : function() { 
                 var self = this;
-                var nparmap = {};
+                var nparmap = {
+                    keyword : self.keyword,
+                    kind : self.kind,
+                    orderKey : self.orderKey
+                };
                 $.ajax({
                     url: "http://localhost:3000/list",  // 서버 주소 수정 (http:// 포함)
                     dataType: "json",
@@ -102,6 +125,12 @@
             },
             fnUser : function(userId) {
                 location.href = "user-view.html?userId="+userId;
+            },
+
+            fnOrder : function(orderKey) {
+                let self = this;
+                self.orderKey = orderKey;
+                self.fnList();
             }
 
             

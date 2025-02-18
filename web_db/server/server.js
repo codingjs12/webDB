@@ -70,17 +70,34 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/list', async (req, res) => {
-  const {} = req.body;  // 클라이언트에서 보낸 데이터
+  const {keyword, kind, orderKey} = req.body;  // 클라이언트에서 보낸 데이터
   try {
     const connection = await connectToDB();
     if (connection) {
+      let search = "";
+      if(kind == "all") {
+        search = `WHERE TITLE LIKE '%${keyword}%' OR USERNAME LIKE '%${keyword}%'`;
+      } else if (kind == "title") {
+        search = `WHERE TITLE LIKE '%${keyword}%'`;
+      } else if (kind == "name") {
+        search = `WHERE USERNAME LIKE '%${keyword}%'`;
+      }
+      let order = "";
+      if(orderKey != "") {
+        order = ` ORDER BY ${orderKey} ASC`
+      }
+
       const result = await connection.execute(
         `SELECT 
           BOARDNO, TITLE, USERNAME, B.USERID,
           CNT, TO_CHAR(B.CDATETIME, 'YYYY-MM-DD') AS CDATETIME 
          FROM BOARD B 
-         INNER JOIN MEMBER M ON B.USERID = M.USERID`,
-        [], 
+         INNER JOIN MEMBER M ON B.USERID = M.USERID ` + search + order,
+         /*
+         '%' + keyword + '%'
+         {keyword : `%${keyword}%`}
+         */
+        {},
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
       res.send({ msg: 'success', list : result.rows });
@@ -251,6 +268,37 @@ app.post('/board/edit', async (req, res) => {
             UDATETIME = SYSDATE
           WHERE BOARDNO = :BOARDNO`,
         [TITLE, CONTENTS, BOARDNO], 
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      
+      await connection.commit();
+      res.send({ msg: 'success'});
+      await connection.close();
+    } else {
+      res.status(500).send({ msg: 'DB 연결 실패' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: '로그인 중 오류가 발생했습니다.' });
+  }
+});
+
+
+app.post('/user/edit', async (req, res) => {
+  console.log(req.body);
+  const { USERNAME, EMAIL, PHONE, GENDER, USERID } = req.body;  // 클라이언트에서 보낸 데이터
+  try {
+    const connection = await connectToDB();
+    if (connection) {
+      const result = await connection.execute(
+        `UPDATE MEMBER
+          SET
+            USERNAME = :USERNAME,
+            EMAIL = :EMAIL,
+            PHONE = :PHONE,
+            GENDER = :GENDER
+          WHERE USERID = :USERID`,
+        [USERNAME, EMAIL, PHONE, GENDER, USERID], 
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
       

@@ -8,13 +8,13 @@ app.use(express.json());
 
 // ejs 설정
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '.')); 
+app.set('views', path.join(__dirname, '.'));
 
 // Oracle DB 연결 설정
 const dbConfig = {
   user: 'system',
   password: 'test1234',
-  connectString: 'localhost:1521/orcl'  
+  connectString: 'localhost:1521/orcl'
 };
 
 async function connectToDB() {
@@ -70,45 +70,45 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/list', async (req, res) => {
-  const {keyword, kind, orderKey, orderType, pageSize, page} = req.body;  // 클라이언트에서 보낸 데이터
+  const { keyword, kind, orderKey, orderType, pageSize, page } = req.body;  // 클라이언트에서 보낸 데이터
   try {
     const connection = await connectToDB();
     if (connection) {
       let search = "";
-      if(kind == "all"){
+      if (kind == "all") {
         search = `WHERE TITLE LIKE '%${keyword}%' OR USERNAME LIKE '%${keyword}%'`;
-      } else if(kind == "title"){
+      } else if (kind == "title") {
         search = `WHERE TITLE LIKE '%${keyword}%'`;
-      } else if(kind == "name"){
+      } else if (kind == "name") {
         search = `WHERE USERNAME LIKE '%${keyword}%'`;
       }
 
       let order = "";
-      if(orderKey != ""){
-        order = ` ORDER BY ${orderKey} ${orderType}` 
-      } 
+      if (orderKey != "") {
+        order = ` ORDER BY ${orderKey} ${orderType}`
+      }
 
       const result = await connection.execute(
         `SELECT 
           BOARDNO, TITLE, USERNAME, B.USERID,
           CNT, TO_CHAR(B.CDATETIME, 'YYYY-MM-DD') AS CDATETIME 
          FROM BOARD B 
-         INNER JOIN MEMBER M ON B.USERID = M.USERID ` 
-         + search + order
-         + ` OFFSET :page ROWS FETCH NEXT :pageSize ROWS ONLY`,      
-        [page, pageSize], 
+         INNER JOIN MEMBER M ON B.USERID = M.USERID `
+        + search + order
+        + ` OFFSET :page ROWS FETCH NEXT :pageSize ROWS ONLY`,
+        [page, pageSize],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
 
       const count = await connection.execute(
         `SELECT COUNT(*) AS BOARDCNT 
         FROM BOARD B 
-        INNER JOIN MEMBER M ON B.USERID = M.USERID`,      
-        {}, 
+        INNER JOIN MEMBER M ON B.USERID = M.USERID`,
+        {},
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
 
-      res.send({ msg: 'success', list : result.rows, count : count.rows[0].BOARDCNT });
+      res.send({ msg: 'success', list: result.rows, count: count.rows[0].BOARDCNT });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -127,12 +127,12 @@ app.post('/remove', async (req, res) => {
     if (connection) {
       const result = await connection.execute(
         `DELETE FROM BOARD WHERE BOARDNO = :boardNo`,
-        [boardNo], 
+        [boardNo],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      
+
       await connection.commit();
-      res.send({ msg: 'success'});
+      res.send({ msg: 'success' });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -156,12 +156,12 @@ app.post('/board/edit', async (req, res) => {
             CONTENTS = :CONTENTS,
             UDATETIME = SYSDATE
           WHERE BOARDNO = :BOARDNO`,
-        [TITLE, CONTENTS, BOARDNO], 
+        [TITLE, CONTENTS, BOARDNO],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      
+
       await connection.commit();
-      res.send({ msg: 'success'});
+      res.send({ msg: 'success' });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -174,7 +174,7 @@ app.post('/board/edit', async (req, res) => {
 
 app.post('/user/edit', async (req, res) => {
   console.log(req.body);
-  const { USERID, USERNAME, EMAIL, PHONE, GENDER  } = req.body;  // 클라이언트에서 보낸 데이터
+  const { USERID, USERNAME, EMAIL, PHONE, GENDER } = req.body;  // 클라이언트에서 보낸 데이터
   try {
     const connection = await connectToDB();
     if (connection) {
@@ -186,13 +186,13 @@ app.post('/user/edit', async (req, res) => {
             PHONE = :PHONE,
             GENDER = :GENDER
           WHERE USERID = :USERID`,
-        [USERNAME, EMAIL, PHONE, GENDER, USERID], 
+        [USERNAME, EMAIL, PHONE, GENDER, USERID],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      
+
       await connection.commit();
-      
-      res.send({ msg: 'success'});
+
+      res.send({ msg: 'success' });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -204,7 +204,7 @@ app.post('/user/edit', async (req, res) => {
 });
 
 app.post('/view', async (req, res) => {
-  const {boardNo} = req.body;  // 클라이언트에서 보낸 데이터
+  const { boardNo } = req.body;  // 클라이언트에서 보낸 데이터
   try {
     const connection = await connectToDB();
     if (connection) {
@@ -212,11 +212,11 @@ app.post('/view', async (req, res) => {
         `UPDATE BOARD 
          SET CNT = CNT+1 
          WHERE BOARDNO = :boardNo`,
-        [boardNo], 
+        [boardNo],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       )
       await connection.commit();
-      
+
       const result = await connection.execute(
         `SELECT 
           BOARDNO, TITLE, USERNAME, CONTENTS,
@@ -224,10 +224,10 @@ app.post('/view', async (req, res) => {
          FROM BOARD B 
          INNER JOIN MEMBER M ON B.USERID = M.USERID 
          WHERE BOARDNO = :boardNo`,
-        [boardNo], 
+        [boardNo],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      res.send({ msg: 'success', info : result.rows[0] });
+      res.send({ msg: 'success', info: result.rows[0] });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -239,10 +239,10 @@ app.post('/view', async (req, res) => {
 });
 
 app.post('/board/info', async (req, res) => {
-  const {boardNo} = req.body;  // 클라이언트에서 보낸 데이터
+  const { boardNo } = req.body;  // 클라이언트에서 보낸 데이터
   try {
     const connection = await connectToDB();
-    if (connection) {  
+    if (connection) {
       const result = await connection.execute(
         `SELECT 
           BOARDNO, TITLE, USERNAME, CONTENTS,
@@ -250,10 +250,10 @@ app.post('/board/info', async (req, res) => {
          FROM BOARD B 
          INNER JOIN MEMBER M ON B.USERID = M.USERID 
          WHERE BOARDNO = :boardNo`,
-        [boardNo], 
+        [boardNo],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      res.send({ msg: 'success', info : result.rows[0] });
+      res.send({ msg: 'success', info: result.rows[0] });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -275,12 +275,12 @@ app.post('/insert', async (req, res) => {
         `INSERT INTO BOARD 
          VALUES(BOARD_SEQ.NEXTVAL, :title, :contents, :userId, 
          :kind, 0, 0, 1, 'N', SYSDATE, SYSDATE)`,
-        [title, contents, userId, kind], 
+        [title, contents, userId, kind],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      
+
       await connection.commit();
-      res.send({ msg: 'success'});
+      res.send({ msg: 'success' });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -299,7 +299,7 @@ app.post('/user/info', async (req, res) => {
     if (connection) {
       const result = await connection.execute(
         `SELECT * FROM MEMBER WHERE USERID = :userId`,
-        [userId], 
+        [userId],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
 
@@ -322,6 +322,90 @@ app.post('/user/info', async (req, res) => {
 });
 
 
+app.post('/prof/list', async (req, res) => {
+  const {} = req.body;  // 클라이언트에서 보낸 데이터
+  try {
+    const connection = await connectToDB();
+    if (connection) {
+      const result = await connection.execute(
+        `SELECT PROFNO, NAME, POSITION, PAY, TO_CHAR(HIREDATE, 'YYYY-MM-DD') AS HDATE, DNAME
+          FROM PROFESSOR P
+          INNER JOIN DEPARTMENT D ON P.DEPTNO = D.DEPTNO`,
+        {},
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      res.send({ msg: 'success', list: result.rows });
+      await connection.close();
+    } else {
+      res.status(500).send({ msg: 'DB 연결 실패' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: '로그인 중 오류가 발생했습니다.' });
+  }
+});
+
+app.post('/prof/remove', async (req, res) => {
+  console.log(req.body);
+  const { list } = req.body;  // 클라이언트에서 보낸 데이터
+  try {
+    const connection = await connectToDB();
+    if (connection) {
+      let deleteTxt = "WHERE PROFNO IN (";
+      // WHERE PROFNO IN ()
+      for(let i = 0; i < list.length; i++) {
+        deleteTxt += list[i];
+        if(list.length -1 != i) {
+          deleteTxt += ",";
+        }
+      }
+
+      deleteTxt += ")";
+
+      const result = await connection.execute(
+        `DELETE FROM PROFESSOR ` + deleteTxt,
+        {},
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      await connection.commit();
+      res.send({ msg: 'success' });
+      await connection.close();
+    } else {
+      res.status(500).send({ msg: 'DB 연결 실패' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: '로그인 중 오류가 발생했습니다.' });
+  }
+});
+
+
+app.post('/emp/list', async (req, res) => {
+  const {} = req.body;  // 클라이언트에서 보낸 데이터
+  try {
+    const connection = await connectToDB();
+    if (connection) {
+      const result = await connection.execute(
+        `SELECT SUM(SAL) AS SSAL, DNAME
+          FROM EMP E
+          INNER JOIN DEPT D ON E.DEPTNO = D.DEPTNO
+          GROUP BY DNAME`,
+        {},
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      res.send({ msg: 'success', list: result.rows });
+      await connection.close();
+    } else {
+      res.status(500).send({ msg: 'DB 연결 실패' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: '로그인 중 오류가 발생했습니다.' });
+  }
+});
 
 app.listen(3000, () => {
   console.log('서버가 3000 포트에서 실행 중입니다.');

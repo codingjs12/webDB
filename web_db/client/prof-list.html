@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>연습!!!!!!!!</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        table, tr, th, td {
+            text-align: center;
+            border : 2px solid #bbb;
+            border-collapse: collapse;
+            padding : 5px;
+        }
+        th {
+            color : rgb(132, 39, 219);
+            background-color: aliceblue;
+            /* font-size: 30px; */
+        }
+        .r-margin {
+            margin-right: 5px;
+        }
+        .a-margin {
+            width: 430px;
+            margin : 10px;
+            text-align: center;
+        }
+        #index {
+            margin-right: 3px;
+            text-decoration: none;
+        }
+        .color-black{
+            color : black;
+        }
+        .color-blue{
+            color : blue;
+        }
+        .bgcolor-gray{
+            background-color: #ddd;
+        }
+        #container{
+            width: 1000px;
+            margin : 20px auto;
+        }
+        a{
+            text-decoration: none;
+        }
+
+        table {
+            width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="container">
+            <!-- <div class="a-margin">
+                <select v-model="kind" class="r-margin">
+                    <option value="all">::전체::</option>
+                    <option value="title">제목</option>
+                    <option value="name">작성자</option>
+                </select>
+                <input v-model="keyword" @keyup.enter="fnList" class="r-margin"> 
+                <button @click="fnList">검색</button>
+            </div>
+            <div>
+                <select v-model="pageSize" @change="fnList">
+                    <option value="5">5개씩</option>
+                    <option value="10">10개씩</option>
+                    <option value="15">15개씩</option>
+                    <option value="20">20개씩</option>
+                </select>
+            </div> -->
+            <table>
+                <tr>
+                    <th>선택</th>
+                    <th>교수번호</th>
+                    <th>
+                        <a href="javascript:;">이름</a>
+                    </th>
+                    <th>
+                        <a href="javascript:;">직책</a>
+                    </th>
+                    <th>
+                        <a href="javascript:;">급여</a>
+                    </th>
+                    <th>입사일</th>
+                    <th>학과명</th>
+                </tr>
+                <tr v-for="item in list">
+                    <td>
+                        <input type="checkbox" :value="item.PROFNO" v-model="selectItems">
+                    </td>
+                    <td>{{item.PROFNO}}</td>
+                    <td class="name">
+                        <a href="javascript:;">{{item.NAME}}</a>
+                    </td>
+                    <td>
+                        <a href="javascript:;">{{item.POSITION}}</a>
+                    </td>
+                    <td>{{item.PAY}}</td>
+                    <td>{{item.HDATE}}</td>
+                    <td class="dname">{{item.DNAME}}</td>
+                    
+                </tr>
+            </table>
+            <!-- <div style="width: 450px; text-align: center; margin-top : 10px;">
+                <a 
+                    v-if="page != 1"
+                    id="index" 
+                    href="javascript:;" 
+                    class="color-black"
+                    @click="fnPageMove('prev')"> < 
+                </a>
+                
+                <a id="index" href="javascript:;" 
+                    v-for="num in index" @click="fnPage(num)">
+                    <span 
+                        v-if="page == num" 
+                        class="bgcolor-gray color-blue">{{num}}
+                    </span>
+                    <span 
+                        v-else 
+                        class="color-black">{{num}}
+                    </span>
+                </a>
+                <a 
+                    v-if="page != index"
+                    id="index" 
+                    href="javascript:;" 
+                    class="color-black"
+                    @click="fnPageMove('next')"> > 
+                </a>
+            </div> -->
+            <div>
+                <button @click="fnRemove">삭제</button>
+            </div>
+            <!-- <div style="margin-bottom : 300px;"></div> -->
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                list : [],
+                selectItems : []
+            };
+        },
+        methods: {
+            fnList : function() { 
+                var self = this;
+                var nparmap = {};
+                $.ajax({
+                    url: "http://localhost:3000/prof/list",  // 서버 주소 수정 (http:// 포함)
+                    dataType: "json",
+                    type: "POST", // GET, POST
+                    data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
+                    contentType: "application/json",
+                    success: function(data) {
+                        console.log(data);
+                        self.list = data.list;
+                    }
+                });
+            },
+
+            fnRemove : function(){
+                let self = this;
+                let nparmap = {list : self.selectItems};
+                if(!confirm("정말 삭제할거?")){
+                    return;
+                }
+                $.ajax({
+                    url: "http://localhost:3000/prof/remove",  // 서버 주소 수정 (http:// 포함)
+                    dataType: "json",
+                    type: "POST", // GET, POST
+                    data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
+                    contentType: "application/json",
+                    success: function(data) {
+                        alert("삭제되었습니다!");
+                        console.log(data);
+                        self.fnList();
+                    }
+                });
+            },
+            /*
+            fnView : function(boardNo){
+                location.href = "board-view.html?boardNo="+boardNo;
+            },
+
+            fnInsert : function(){
+                location.href = "board-insert.html";
+            },
+
+            fnUser : function(userId){
+                location.href = "user-view.html?userId="+userId;
+            },
+
+            fnOrder : function(orderKey){
+                let self = this;
+                if(self.orderKey != orderKey){
+                    self.orderType = "";
+                }
+                self.orderKey = orderKey;
+                self.orderType = self.orderType == "ASC" ? "DESC" : "ASC";
+                self.fnList();
+            },
+
+            fnPage : function(num){
+                let self = this;
+                self.page = num;
+                self.fnList();
+            },
+
+            fnPageMove : function(direction){
+                let self = this;
+                if(direction == "next"){
+                    self.page++;
+                } else {
+                    self.page--;
+                }
+                self.fnList();
+            }
+            */
+
+        }, // methods
+        mounted() {
+            // 처음 시작할 때 실행되는 부분
+            this.fnList();
+        }
+    });
+
+    app.mount('#app');
+</script>

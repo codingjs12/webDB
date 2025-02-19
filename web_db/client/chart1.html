@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div id="chart"></div>
+
+    </div>
+</body>
+
+</html>
+
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                // 변수
+                options : {
+                    series: [{
+                        data: []
+                    }],
+                    chart: {
+                        type: 'bar',
+                        height: 800
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4,
+                            borderRadiusApplication: 'end',
+                            horizontal: true,
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    xaxis: {
+                        categories: [
+                        ],
+                    }
+                },
+                list : []
+            };
+        },
+        methods: {
+            // 함수(메소드)
+            fnList : function() { 
+                let self = this;
+                let nparmap = {};
+                $.ajax({
+                    url: "http://localhost:3000/prof/list",  // 서버 주소 수정 (http:// 포함)
+                    dataType: "json",
+                    type: "POST", // GET, POST
+                    data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
+                    contentType: "application/json",
+                    success: function(data) {
+                        console.log(data);
+                        self.list = data.list;
+
+                        self.fnChart();
+                    }
+                });
+                
+            },
+            fnChart : function() {
+                let payList = [];
+                let nameList = [];
+                let self = this;
+
+                for(i=0;i<self.list.length;i++) {
+                    payList.push(self.list[i].PAY);
+                    nameList.push(self.list[i].NAME);
+                }
+                self.options.series[0].data = payList;
+                self.options.xaxis.categories = nameList;
+
+                let chart = new ApexCharts(document.querySelector("#chart"), this.options);
+                chart.render();
+            }
+        },
+        mounted() {
+            // 처음 시작할 때 실행되는 부분
+            this.fnList();
+        }
+    });
+
+    app.mount('#app');
+</script>

@@ -30,6 +30,14 @@
             padding: 30px;
             height: 200px;
         }
+
+        .t-margin {
+            margin-top: 10px;
+        }
+
+        .comment {
+            padding: 0px 30px;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +65,33 @@
                     <td id="contents">{{info.CONTENTS}}</td>
                 </tr>
             </table>
+
+            <div>
+                <table class="t-margin" style="width: 726px;">
+                    <tr>
+                        <th>작성자</th>
+                        <td>내용</td>
+                    </tr>
+                    <tr v-for="item in commentList">
+                        <th>{{item.USERID}}</th>
+                        <td>{{item.CONTENTS}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div>
+                <table>
+                    <tr>
+                        <th>댓글 입력 : </th>
+                        <td>
+                            <textarea v-model="cmt" cols="30" rows="5"></textarea>
+                        </td>
+                        <td style="width: 90px;">
+                            <button @click="fnCommentSave">저장</button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
             <div style="margin-top : 10px">
                 <button style="margin-right: 5px;" @click="fnRemove">삭제</button>
                 <button @click="fnEdit">수정</button>
@@ -71,13 +106,15 @@
         data() {
             return {
                 info : {},
-                boardNo : "" 
+                boardNo : "" ,
+                commentList : [],
+                cmt : ""
             };
         },
         methods: {
             fnInfo : function() { 
-                var self = this;
-                var nparmap = {boardNo : self.boardNo};
+                let self = this;
+                let nparmap = {boardNo : self.boardNo};
                 $.ajax({
                     url: "http://localhost:3000/view",  // 서버 주소 수정 (http:// 포함)
                     dataType: "json",
@@ -85,8 +122,9 @@
                     data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
                     contentType: "application/json",
                     success: function(data) {
-                        console.log(data.info);
+                        console.log(data);
                         self.info = data.info;
+                        self.commentList = data.commentList;
                     }
                 });
             },
@@ -116,6 +154,32 @@
                 // board-edit.html에서는 boardNo를 변수에 저장
                 let self = this;
                 location.href = "board-edit.html?boardNo="+self.boardNo;
+            },
+
+            fnCommentSave : function() {
+                let self = this;
+                let nparmap = {
+                    cmt : self.cmt,
+                    boardNo : self.boardNo
+                };
+
+                $.ajax({
+                    url: "http://localhost:3000/comment/save",  // 서버 주소 수정 (http:// 포함)
+                    dataType: "json",
+                    type: "POST", // GET, POST
+                    data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
+                    contentType: "application/json",
+                    success: function(data) {
+                        if(data.msg == "success") {
+                            alert("댓글이 등록되었습니다.");
+                            self.fnInfo();
+                        } else {
+                            alert("오류 발생!");
+                        }
+
+                    }
+                });
+
             }
                 
         }, // methods

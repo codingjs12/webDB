@@ -86,7 +86,13 @@
                 <tr v-for="item in list">
                     <td>{{item.BOARDNO}}</td>
                     <td>
-                        <a href="javascript:;" @click="fnView(item.BOARDNO)">{{item.TITLE}}</a>
+                        <a href="javascript:;" @click="fnView(item.BOARDNO)" >
+                            {{item.TITLE}} 
+                            <span v-if="item.COMMENTCNT != 0">
+                                ({{item.COMMENTCNT}})
+                            </span>
+                        </a>
+                        
                     </td>
                     <td>
                         <a href="javascript:;" @click="fnUser(item.USERID)">{{item.USERNAME}}</a>
@@ -96,6 +102,10 @@
                     <td><button @click="fnRemove(item.BOARDNO)">삭제</button></td>
                 </tr>
             </table>
+
+            
+
+
             <div style="width: 450px; text-align: center; margin-top : 10px;">
                 <a 
                     v-if="page != 1"
@@ -171,6 +181,7 @@
                     }
                 });
             },
+
             fnRemove : function(boardNo){
                 var self = this;
                 var nparmap = {boardNo : boardNo}; // {boardNo}
@@ -191,12 +202,15 @@
                     }
                 });
             },
+
             fnView : function(boardNo){
                 location.href = "board-view.html?boardNo="+boardNo;
             },
+
             fnInsert : function(){
                 location.href = "board-insert.html";
             },
+
             fnUser : function(userId){
                 location.href = "user-view.html?userId="+userId;
             },
@@ -210,11 +224,13 @@
                 self.orderType = self.orderType == "ASC" ? "DESC" : "ASC";
                 self.fnList();
             },
+
             fnPage : function(num){
                 let self = this;
                 self.page = num;
                 self.fnList();
             },
+
             fnPageMove : function(direction){
                 let self = this;
                 if(direction == "next"){
@@ -224,7 +240,6 @@
                 }
                 self.fnList();
             }
-
             
         }, // methods
         mounted() {

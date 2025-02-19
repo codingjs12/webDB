@@ -89,11 +89,15 @@ app.post('/list', async (req, res) => {
       }
 
       const result = await connection.execute(
-        `SELECT 
-          BOARDNO, TITLE, USERNAME, B.USERID,
-          CNT, TO_CHAR(B.CDATETIME, 'YYYY-MM-DD') AS CDATETIME 
-         FROM BOARD B 
-         INNER JOIN MEMBER M ON B.USERID = M.USERID `
+        `SELECT B.BOARDNO, TITLE,USERNAME, B.USERID, CNT ,TO_CHAR(B.CDATETIME, 'YYYY-MM-DD') AS CDATETIME, NVL(COMMENTCNT, 0) AS COMMENTCNT
+          FROM BOARD B
+          INNER JOIN MEMBER M ON B.USERID = M.USERID
+          LEFT JOIN 
+          (
+            SELECT BOARDNO, COUNT(*) AS COMMENTCNT
+            FROM BOARD_COMMENT
+            GROUP BY BOARDNO
+          ) T ON B.BOARDNO = T.BOARDNO `
         + search + order
         + ` OFFSET :page ROWS FETCH NEXT :pageSize ROWS ONLY`,
         [page, pageSize],
@@ -227,7 +231,16 @@ app.post('/view', async (req, res) => {
         [boardNo],
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-      res.send({ msg: 'success', info: result.rows[0] });
+
+
+      const comment = await connection.execute(
+        `SELECT *
+         FROM BOARD_COMMENT 
+         WHERE BOARDNO = :boardNo`,
+        [boardNo],
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+      res.send({ msg: 'success', info: result.rows[0], commentList : comment.rows });
       await connection.close();
     } else {
       res.status(500).send({ msg: 'DB 연결 실패' });
@@ -406,6 +419,65 @@ app.post('/emp/list', async (req, res) => {
     res.status(500).send({ msg: '로그인 중 오류가 발생했습니다.' });
   }
 });
+
+
+app.post('/board/comment', async (req, res) => {
+  const {} = req.body;  // 클라이언트에서 보낸 데이터
+  try {
+    const connection = await connectToDB();
+    if (connection) {
+      const result = await connection.execute(
+        `SELECT B.BOARDNO, TITLE, NVL(CCNT, 0) AS CCNT
+          FROM BOARD B
+          INNER JOIN MEMBER M ON B.USERID = M.USERID
+          LEFT JOIN 
+          (
+            SELECT BOARDNO, COUNT(*) AS CCNT
+            FROM BOARD_COMMENT
+            GROUP BY BOARDNO
+          ) T ON B.BOARDNO = T.BOARDNO`,
+        {},
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      res.send({ msg: 'success', list: result.rows });
+      await connection.close();
+    } else {
+      res.status(500).send({ msg: 'DB 연결 실패' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: '로그인 중 오류가 발생했습니다.' });
+  }
+});
+
+
+app.post('/comment/save', async (req, res) => {
+  console.log(req.body);
+  const { cmt, boardNo } = req.body;  // 클라이언트에서 보낸 데이터
+  try {
+    const connection = await connectToDB();
+    if (connection) {
+      const result = await connection.execute(
+        `INSERT INTO BOARD_COMMENT 
+         VALUES(COMMENT_SEQ.NEXTVAL, :boardNo, 'user01', :cmt, 
+         1, SYSDATE, SYSDATE)`,
+        [boardNo, cmt],
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      await connection.commit();
+      res.send({ msg: 'success' });
+      await connection.close();
+    } else {
+      res.status(500).send({ msg: 'DB 연결 실패' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: '작성 중 오류가 발생했습니다.' });
+  }
+});
+
 
 app.listen(3000, () => {
   console.log('서버가 3000 포트에서 실행 중입니다.');

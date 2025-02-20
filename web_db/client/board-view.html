@@ -70,11 +70,27 @@
                 <table class="t-margin" style="width: 726px;">
                     <tr>
                         <th>작성자</th>
-                        <td>내용</td>
+                        <th>내용</th>
+                        <th></th>
                     </tr>
                     <tr v-for="item in commentList">
                         <th>{{item.USERID}}</th>
-                        <td>{{item.CONTENTS}}</td>
+                        <td>
+                            <label v-if="editCommentNo == item.COMMENTNO">
+                                <input v-model="editContents">
+                            </label>
+                            <label v-else>{{item.CONTENTS}}</label>
+                        </td>
+                        <td>
+                            <template v-if="editCommentNo == item.COMMENTNO">
+                                <button @click="fnCommentUpdate(item.COMMENTNO)">저장</button>
+                                <button @click="editCommentNo = ''">취소</button>
+                            </template>
+                            <template v-else>
+                                <button @click="fnCommentEdit(item)">수정</button>
+                                <button @click="fnCommentRemove(item.COMMENTNO)">삭제</button>
+                            </template>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -108,7 +124,9 @@
                 info : {},
                 boardNo : "" ,
                 commentList : [],
-                cmt : ""
+                cmt : "",
+                editCommentNo : "",
+                editContents : ""
             };
         },
         methods: {
@@ -129,8 +147,8 @@
                 });
             },
             fnRemove : function(){
-                var self = this;
-                var nparmap = {boardNo : self.boardNo}; // {boardNo}
+                let self = this;
+                let nparmap = {boardNo : self.boardNo}; // {boardNo}
                 if(!confirm("정말 삭제할거?")){
                     return;
                 }
@@ -180,13 +198,58 @@
                     }
                 });
 
+            },
+
+            fnCommentRemove : function(COMMENTNO) {
+                let self = this;
+                let nparmap = {commentNo : COMMENTNO};
+                if(!confirm("정말 삭제할거?")){
+                    return;
+                }
+                $.ajax({
+                    url: "http://localhost:3000/comment/remove",  // 서버 주소 수정 (http:// 포함)
+                    dataType: "json",
+                    type: "POST", // GET, POST
+                    data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
+                    contentType: "application/json",
+                    success: function(data) {
+                        alert("삭제되었습니다!");
+                        self.fnInfo();
+                    }
+                });
+            },
+
+            fnCommentEdit : function(item) {
+                let self = this;
+                self.editCommentNo = item.COMMENTNO;
+                self.editContents = item.CONTENTS;
+            },
+
+            fnCommentUpdate : function(COMMENTNO) {
+                let self = this;
+                let nparmap = {
+                    COMMENTNO : COMMENTNO,
+                    CONTENTS : self.editContents
+                }
+                $.ajax({
+                    url: "http://localhost:3000/comment/update",  // 서버 주소 수정 (http:// 포함)
+                    dataType: "json",
+                    type: "POST", // GET, POST
+                    data: JSON.stringify(nparmap),   // 서버로 보낼 데이터
+                    contentType: "application/json",
+                    success: function(data) {
+                        alert("수정되었습니다!");
+                        self.editCommentNo = "";
+                        self.fnInfo();
+                    }
+                });
             }
                 
         }, // methods
         mounted() {
             // 처음 시작할 때 실행되는 부분
             const queryParams = new URLSearchParams(window.location.search);
-            this.boardNo = queryParams.get('boardNo'); 
+            this.boardNo = queryParams.get('boardNo');
             console.log("boardNo ===> ", this.boardNo);
             this.fnInfo();
         }
